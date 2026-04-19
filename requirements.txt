@@ -1,0 +1,6 @@
+# Runtime dependencies
+# Generated from pyproject.toml [project.dependencies]
+# Install: pip install -r requirements.txt
+
+boto3>=1.34.0
+botocore>=1.34.0

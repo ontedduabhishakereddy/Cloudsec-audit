@@ -1,0 +1,25 @@
+# Development & test dependencies
+# Generated from pyproject.toml [project.optional-dependencies.dev]
+# Install: pip install -r requirements-dev.txt
+
+# Runtime
+-r requirements.txt
+
+# Testing
+pytest>=7.4
+pytest-cov>=4.1
+pytest-mock>=3.12
+
+# AWS mocking — moto>=5.0 required for unified mock_aws decorator
+# moto[all] installs backends for all AWS services
+moto[all]>=5.0
+
+# Linting & formatting
+black>=24.0
+ruff>=0.3
+
+# Type checking
+mypy>=1.9
+# boto3 type stubs — gives proper type info for IAM, EC2, S3, STS clients
+boto3-stubs[iam,ec2,s3,sts]>=1.34.0
+botocore-stubs>=1.34.0

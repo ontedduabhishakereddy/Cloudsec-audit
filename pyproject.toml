@@ -1,0 +1,131 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloudsec-audit"
+version = "1.0.0"
+description = "Continuous cloud security posture auditing for AWS, GCP, and Azure"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Abhishake Reddy Onteddu", email = "ontedduabhishakereddy@gmail.com" }]
+keywords = ["aws", "security", "cspm", "cloud", "iam", "posture", "compliance"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+requires-python = ">=3.9"
+
+# ── Runtime dependencies ──────────────────────────────────────────────────────
+dependencies = [
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+]
+
+# ── Optional / extras ─────────────────────────────────────────────────────────
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-mock>=3.12",
+    # moto — AWS mocking. [all] pulls every service backend.
+    # Requires moto>=5.0 for the unified mock_aws decorator.
+    "moto[all]>=5.0",
+    # Linting / formatting
+    "black>=24.0",
+    "ruff>=0.3",
+    # Type checking
+    "mypy>=1.9",
+    # boto3 type stubs — provides proper type info for boto3 clients
+    "boto3-stubs[iam,ec2,s3,sts]>=1.34.0",
+    "botocore-stubs>=1.34.0",
+]
+docs = [
+    "sphinx>=7.0",
+    "furo>=2024.1",
+    "sphinx-autodoc-typehints>=2.0",
+]
+
+# ── Entry points ──────────────────────────────────────────────────────────────
+[project.scripts]
+cloudsec-audit = "cloudsec_audit.cli:main"
+
+# ── URLs ──────────────────────────────────────────────────────────────────────
+[project.urls]
+Homepage = "https://github.com/ontedduabhishakereddy/cloudsec-audit"
+Documentation = "https://github.com/ontedduabhishakereddy/cloudsec-audit/blob/main/README"
+"Bug Tracker" = "https://github.com/ontedduabhishakereddy/cloudsec-audit/issues"
+
+# ── Package discovery ─────────────────────────────────────────────────────────
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cloudsec_audit*"]
+
+[tool.setuptools.package-data]
+cloudsec_audit = ["py.typed"]
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=cloudsec_audit --cov-report=term-missing --cov-report=xml"
+# Treat warnings as errors in tests (except deprecation warnings from moto/boto3)
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ── ruff ──────────────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",   # line too long — handled by black
+    "B008",   # do not perform function calls in default args
+]
+
+# ── mypy ──────────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.9"
+# Not strict=true — boto3 stubs aren't perfect; use targeted ignores instead
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+# Per-module overrides for generated/external code
+[[tool.mypy.overrides]]
+module = ["moto.*", "boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+# ── black ─────────────────────────────────────────────────────────────────────
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+# ── coverage ──────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["cloudsec_audit"]
+omit = ["tests/*", "examples/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

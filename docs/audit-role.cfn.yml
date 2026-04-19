@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  cloudsec-audit IAM Role — read-only audit role for cloudsec-audit.
+  Deploy this in each account you want to audit.
+
+Parameters:
+  TrustedAccountId:
+    Type: String
+    Description: AWS Account ID of the account running cloudsec-audit (the "hub" account)
+    AllowedPattern: "[0-9]{12}"
+
+  ExternalId:
+    Type: String
+    Description: External ID for confused deputy protection (set the same value in your audit config)
+    Default: "cloudsec-audit-external-id"
+
+  RoleName:
+    Type: String
+    Default: SecurityAuditRole
+    Description: Name of the IAM role to create
+
+Resources:
+  SecurityAuditRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      Description: Read-only role for cloudsec-audit security posture scanning
+      MaxSessionDuration: 3600
+
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${TrustedAccountId}:root"
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
+
+      ManagedPolicyArns:
+        # AWS-managed read-only security audit policy
+        - arn:aws:iam::aws:policy/SecurityAudit
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+
+      # Explicit deny of any mutating actions as a safety net
+      Policies:
+        - PolicyName: DenyMutatingActions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Deny
+                Action:
+                  - "iam:Create*"
+                  - "iam:Delete*"
+                  - "iam:Update*"
+                  - "iam:Put*"
+                  - "iam:Attach*"
+                  - "iam:Detach*"
+                  - "s3:Put*"
+                  - "s3:Delete*"
+                  - "ec2:Create*"
+                  - "ec2:Delete*"
+                  - "ec2:Modify*"
+                  - "ec2:Authorize*"
+                  - "ec2:Revoke*"
+                Resource: "*"
+
+      Tags:
+        - Key: ManagedBy
+          Value: cloudsec-audit
+        - Key: Purpose
+          Value: SecurityAudit
+
+Outputs:
+  RoleArn:
+    Description: ARN of the security audit role
+    Value: !GetAtt SecurityAuditRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-RoleArn"
+
+  UsageExample:
+    Description: Example cloudsec-audit command to use this role
+    Value: !Sub |
+      cloudsec-audit --role-arn ${SecurityAuditRole.Arn} --external-id ${ExternalId} --regions us-east-1
