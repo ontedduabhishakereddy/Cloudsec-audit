@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
-
+### Documentation
+- Renamed CONTRIBUTIG.md to CONTRIBUTING.md for consistency with the standard GitHub contribution guide filename.
 ### Planned
 - AWS CloudTrail configuration checks
 - AWS RDS public accessibility checks
